@@ -10,17 +10,17 @@ module.exports = {
         // after html generation, rewrite the pages
         "finish": function (context) {
             var config = this.options.pluginsConfig["gitbook-restructure-navigation"];
-            transformations.registerTransformations(config);
             var book = this;
+            transformations.registerTransformations(config, pages.length);
             var output = book.context.config.output;
             pages.forEach(function (pagePath) {
                 var fullPath = output + '/' + pagePath;
                 var data = fs.readFileSync(fullPath).toString();
 
-                var newData = nodes.addNumbering(
-                    transformations.applyTransformations(
-                        nodes.stripNumbering(data), 'ul.summary > li'));
-                
+                var stripped = nodes.stripNumbering(data);
+                var transformed = transformations.applyTransformations(stripped, 'ul.summary > li');
+                var newData = nodes.addNumbering(transformed);
+
                 if (newData != data) {
                     book.log.info('Re-writing navigation of file: ', pagePath, '\n');
                     fs.writeFileSync(fullPath, newData);
